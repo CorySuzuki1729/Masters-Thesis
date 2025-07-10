@@ -1,0 +1,910 @@
+%----------------------------------------------------------------------------------------
+%    PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimpleDarkBlue}
+
+\usepackage{hyperref}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+
+%----------------------------------------------------------------------------------------
+%    TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title{Data-Driven Black-Box Modeling of Hidden Systems of Ordinary and Partial Differential Equations}
+\subtitle{Masters Thesis Defense}
+
+\author{Cory Suzuki}
+
+\institute
+{
+    Department of Mathematics \& Statistics \\
+    California State University, Long Beach % Your institution for the title page
+}
+\date{11 July 2025} % Date, can be changed to a custom date
+
+%----------------------------------------------------------------------------------------
+%    PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{frame}
+    % Print the title page as the first slide
+    \titlepage
+\end{frame}
+
+\begin{frame}{Overview}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+%------------------------------------------------
+\section{Introduction}
+%------------------------------------------------
+
+\begin{frame}{Introduction}
+    \begin{itemize}
+        \item Partial differential equations (PDEs) and systems of Ordinary Differential Equations (ODEs) govern change within physical systems from finance to fluid dynamics
+        \item What if we want to model physical systems and how they change over time for any point in time?
+        \item Goal: Utilize machine learning and statistical techniques to learn about the system and extract a data-driven governing equation to be used as a predictive extrapolation model
+        \item Apply linear regression, regularized LASSO regression, and Proper Orthogonal Decomposition (POD) to extract hidden latent information from video data
+        \item Once the model is obtained, can we generate image extrapolations after training the model for any time step ($t \in \mathbb{R}$) in the future?
+    \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+% \begin{frame}{Blocks of Highlighted Text}
+%     In this slide, some important text will be \alert{highlighted} because it's important. Please, don't abuse it.
+
+%     \begin{block}{Block}
+%         Sample text
+%     \end{block}
+
+%     \begin{alertblock}{Alertblock}
+%         Sample text in red box
+%     \end{alertblock}
+
+%     \begin{examples}
+%         Sample text in green box. The title of the block is ``Examples".
+%     \end{examples}
+% \end{frame}
+
+%------------------------------------------------
+
+% \begin{frame}{Multiple Columns}
+%     \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+%         \column{.45\textwidth} % Left column and width
+%         \textbf{Heading}
+%         \begin{enumerate}
+%             \item Statement
+%             \item Explanation
+%             \item Example
+%         \end{enumerate}
+
+%         \column{.45\textwidth} % Right column and width
+%         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
+
+%     \end{columns}
+% \end{frame}
+
+%------------------------------------------------
+% \section{Literature Review}
+% %------------------------------------------------
+
+% \begin{frame}{Literature Review of Established Research}
+%     \begin{itemize}
+%         \item Data-Driven ODE Modeling of the High-Frequency Complex Dynamics via a Low-Frequency Dynamics Model (Tsutsumi and et al.)
+%         \item Coarse-Scale PDEs from Fine-Scale Observations via Machine Learning (Lee and et al.)
+%         \item Data-Driven Science \& Engineering: Machine Learning, Dynamical Systems, and Control (Brunton and Kutz)
+%         \item Uncovering Closed-Form Governing Equations of Non-linear Dynamics from Videos (Luan and et al.)
+%         \item Proper Orthogonal Decomposition (Chatterjee)
+%     \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Data-Driven ODE Modeling of the High-Frequency Complex Dynamics via a Low-Frequency Dynamics Model}
+% \begin{itemize}
+%     \item Uses a joint model of neural ordinary differential equations and radial basis function regression to capture nonlinear dynamical systems
+%     \item Shown to be successful in analyzing high dimensional spatial components and time series in lower dimensions
+%     \item \emph{Drawback}: Introduction of polynomial basis functions increases the computational runtime and complexity cost in high dimensions \cite{p6}
+%     \item Radial basis regression is helpful in producing forecasting extrapolations for an object in linear and nonlinear systems once the regression model is trained
+% \end{itemize}
+% \begin{block}{Radial Basis Regression Model}
+% Given an observable $D$-dimensional time series states vector $X = (X_{1}, X_{2},...,X_{D})^T$:
+% \begin{equation}
+%     \displaystyle \boldsymbol{F}(\boldsymbol{X}) = \beta_{0} + \sum_{d=1,...,D} \beta_{d}X_{d} + \sum_{j=1,...,J} \beta_{D+j}\phi_{j}(\boldsymbol{X})
+%     \label{eqn:regression}
+% \end{equation}
+% \end{block}
+    
+% \end{frame}
+
+% \begin{frame}{Data-Driven ODE Modeling of the High-Frequency Complex Dynamics via a Low-Frequency Dynamics Model Cont.}
+% \begin{itemize}
+%     \item In equation~\eqref{eqn:regression}, the $\phi_{j}(\boldsymbol{X})=exp(\frac{-||\boldsymbol{X}-c_{j}||^2}{\sigma^2})$ where the $c_{j}$'s are distributed as lattice points, $\sigma$ is the standard deviation of a Gaussian distribution, and the regression coefficients $\beta_{j}$ are found via Taylor Series Expansion approximations of the time derivatives in the R{\"o}ssler System
+%     \item While this model captures the ODE system $\frac{d\boldsymbol{X}}{dt}=\boldsymbol{F}(\boldsymbol{X}(t))$, an additional joint Fiber model is used to capture the second component of the autonomous system in $\boldsymbol{Y}$, $\frac{d\boldsymbol{Y}}{dt}=aY_{1}+\boldsymbol{G(\boldsymbol{X}})$ with an extra time step of the target variable $Y$
+%     \begin{block}{Joint Fiber Radial Basis Regression Model}
+%     \begin{equation}
+%     \boldsymbol{G(\boldsymbol{X}})=  \gamma_{0} + \sum_{d=1,...,D} \gamma_{d}X_{d} + \sum_{j=1,...,J} \gamma_{D+j}\phi_{j}(\boldsymbol{X})
+%     \label{eqn:joint_regression}
+%     \end{equation}
+%     \end{block}
+% \end{itemize}
+    
+% \end{frame}
+
+% \begin{frame}{Coarse-Scale PDEs from Fine-Scale Observations via Machine Learning}
+
+% \begin{itemize}
+%     \item Modeling complex spatiotemporal dynamics of physicochemical processes via Gaussian Process Regression, Artificial Neural Networks, and Automatic Relevance Determination
+%     \item Goal: Produce a black-box microscale partial differential equation to model the system and utilize its approximated solution to produce extrapolations for future, nonexistent time steps \cite{p1}
+%     \item Assumption holds that the right-hand side of the PDE with extracted latent features have observations that follow a multivariate Gaussian distribution with zero mean and covariance matrix $K$ defined in equation~\ref{eqn:covariance_mat}
+%     \begin{block}{Covariance Matrix}
+%     \begin{equation}
+%     K_{i,j} = \kappa(\boldsymbol{x_{i}}, \boldsymbol{x_{j}} ; \theta) = \theta_{0} \exp(-\frac{1}{2} \sum_{l=1}^{k} \frac{(x_{i,l}-x_{j,l})^2}{\theta_{l}})
+%     \label{eqn:covariance_mat}
+% \end{equation}
+%     \end{block}
+% \end{itemize}
+    
+% \end{frame}
+
+% \begin{frame}{Coarse-Scale PDEs from Fine-Scale Observations via Machine Learning Cont.}
+% The time derivative in the regression model also follows a multivariate Gaussian distribution represented by:
+% \begin{block}{Distribution of Time Derivative}
+% \begin{equation}
+%     \begin{pmatrix}
+%         \boldsymbol{y}\\
+%         \boldsymbol{y*}
+%     \end{pmatrix} = N\left(\boldsymbol{0}, 
+%     \begin{pmatrix}
+%         K + \sigma^2I & K_{*}\\
+%         K_{*}^T & K_{**}
+%     \end{pmatrix}\right)
+%     \label{eqn:mult_gaussian}
+% \end{equation}
+% \end{block}
+% \begin{itemize}
+% \item The predictive distribution $\boldsymbol{y*}$ for the testing data also has a predictive mean and variance, given as $\boldsymbol{\bar{y}*} = K_{*}(K+\sigma^2I)^{-1}\boldsymbol{y}$ and $K(\boldsymbol{y}*) = K_{**}-K_{*}^T(K+\sigma^2I)^{-1}K_{*}$
+% \item $K_{*}$ is the covariance matrix between training and testing data
+% \item $K_{**}$ is the covariance matrix between the testing data
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Data-Driven Science \& Engineering: Machine Learning, Dynamical Systems, and Control}
+% \begin{itemize}
+%     \item Brunton and Kutz outline the methodology of equation-free heterogeneous multi-scale modeling of multi-scale nonlinear dynamical systems
+%     \item Suggests that utilizing finite difference methods and a machine learning model framework to approximate the time and spatial derivatives is more efficient than numerical discretization of the entire $n$-dimensional system
+%     \item Brunton's framework utilizes a one-dimensional Convolutional Neural Network as the choice of ML model, but sparse regression may be used as an alternative algorithm
+%     \item Further research has shown that multi-grid methods, convolutional autoencoders, and transfer learning architectures may be used during training to extract nonlinear models efficiently compared to the base sparse regression model \cite{p8}
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Uncovering Closed-Form Governing Equations of Non-linear Dynamics from Videos}
+%     \begin{itemize}
+%         \item Luan and et al. introduce an unsupervised learning framework to extract closed-form governing equations directly from raw video data
+%         \item An autoencoder is used to localize moving objects and reconstruct frames from the video
+%         \item A transformer architecture maps pixel trajectories in the data matrix to latent states
+%         \item To determine coefficients for a nonlinear system of ODEs without exact prior knowledge of the system during training, sparse regression is used
+%         \item Framework is tested on different nonlinear physical systems such as Duffing, Van der Pol, and magnetic oscillators \cite{p4}
+%     \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Proper Orthogonal Decomposition}
+%     \begin{itemize}
+%         \item Proper Orthogonal Decomposition (POD) has been applied to analyzing fluid dynamics and turbulence flows
+%         \item Chatterjee provides an introduction to POD for matrix decomposition of high-dimensional data to lower-dimensional representations
+%         \item The $k$th order low-rank approximation of $A$ via POD is the most efficient due to no $k$ matrix being close to A in the Frobenius (discretized $L_{2}$) norm \cite{p2}
+%     \end{itemize}
+%     \begin{block}{Proper Orthogonal Decomposition}
+%     Given an $n \times m$ matrix $A$, POD decomposes the matrix into:
+%     \begin{equation}
+%         A = U \Sigma V^T
+%         \label{eqn:pod_eqn}
+%     \end{equation}
+%     where $U$ is $n \times n$, $\Sigma$ is $n \times m$, and $V^T$ is $m \times m$.
+%     \end{block}
+% \end{frame}
+
+\section{Mathematical Preliminaries}
+
+\begin{frame}{Ordinary Differential Equations}
+\begin{block}{Definition of Ordinary Differential Equation}
+Let $n \in \mathbb{N}$ and $y:Y \rightarrow \mathbb{R}$, where $Y$ is an open subset of $\mathbb{R}^{n}$. Then an nth-order Ordinary Differential Equation (ODE) follows the functional form:
+\begin{equation}
+    F\left(x, y, \frac{dy}{dx},...,\frac{d^{k-1}y}{dx^{k-1}}, \frac{d^{k}y}{dx^{k}}\right)=0
+    \label{eqn:ode_defn}
+\end{equation}
+where the function $F: \mathbb{R}^{n^{k}} \times \mathbb{R}^{n^{k-1}} \times \mathbb{R}^{n} \times \mathbb{R} \times Y \rightarrow \mathbb{R}$ is dependent on x, y, and the derivatives of the independent variable y
+\end{block}
+\begin{itemize}
+    \item Ordinary Differential Equations (ODEs) can be used to mathematically model phenomena in the natural sciences, physics, and economics
+    \item ODEs can be separated into two classes: linear and nonlinear
+    \item Many complicated ODEs require numerical solutions in the case that closed-form solutions are unobtainable
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Partial Differential Equations}
+\begin{block}{Definition of Partial Differential Equation}
+Let $u: U\rightarrow \mathbb{R}$ be an arbitrary, unknown function that is a solution to a partial differential equation. Let $x=(x_1,x_2,...,x_n)$ be the variables belonging to the open subset U of the Euclidian space $\mathbb{R}^n$. Then the kth-order partial differential equation follows the general form:
+\begin{equation}
+    F(D^{k}u, D^{k-1}u,...,Du, u, x)=0
+    \label{eqn:pde_defn}
+\end{equation}
+In this general form, D is the partial differential operator and F is the mapping $F: \mathbb{R}^{n^{k}} \times \mathbb{R}^{n^{k-1}} \times \mathbb{R}^{n} \times \mathbb{R} \times U \rightarrow \mathbb{R}$. 
+\end{block}
+\begin{itemize}
+    \item Partial Differential Equations (PDEs) are extensions of ODEs to several variables
+    \item PDEs can model change across several variables in a system
+    \item The ODEs and PDEs discussed in this study will be linear
+    \item For computing the solutions to our models, emphasis is placed on using numerical techniques
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Fundamental Partial Differential Equations \& their Solutions}
+\begin{block}{Heat (Diffusion) Equation}
+The diffusion equation, sometimes alternatively referred to as the heat equation, takes on the form:
+\begin{equation}
+    u_{t} = ku_{xx}
+    \label{eqn:heat_eqn}
+\end{equation}
+for $0<x<L$ and $t\geq 0$, where $k \in \mathbb{R}$ is the heat-diffusive constant.
+\end{block}
+
+\begin{block}{Wave Equation}
+The heat equation is given in generality by:
+\begin{equation}
+    u_{tt} = c^2u_{xx}
+    \label{eqn:wave_eqn}
+\end{equation}
+for $0<x<L$ and $t \geq 0$ where $c \in \mathbb{R}$ is the wave propagation constant
+\end{block}
+\end{frame}
+
+\begin{frame}{Fundamental Partial Differential Equations \& their Solutions}
+\begin{itemize}
+    \item Equations~\ref{eqn:heat_eqn} and~\ref{eqn:wave_eqn} can be solved analytically via Separation of Variables, decomposing the PDEs into ODEs
+    \item These PDEs can be solved given specific boundary and initial conditions
+    \item Particular solutions and the application of separation of variables can be found in [Strauss, 2008]
+\end{itemize}
+
+\begin{block}{Particular Solution of Heat Equation via Separation of Variables}
+Given the initial condition $u(x,0) = f(x)$ with $f(x)$ being a real-valued function and boundary conditions $u(0,t) = u(L,t) = 0$, the particular solution is:
+\begin{equation}
+    u(x, t) = \sum_{n=1}^{\infty} c_{n} u_{n}(x,t)
+    \label{eqn:heat_general}
+\end{equation}
+\begin{equation}
+    c_{n} = \frac{2}{L} \int_{0}^{L} f(x) \sin(\frac{n \pi x}{L})dx
+    \label{eqn:heat_const}
+\end{equation}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Systems of ODEs}
+\begin{itemize}
+    \item Systems of ODEs are useful in capturing linear and nonlinear dynamics in many physical situations
+    \item Consists of $n$ many ODEs to form a system that can be represented in matrix algebra
+\end{itemize}
+\begin{block}{$n$ First Order System of ODEs}
+For a system of $n$ first-order linear equations,
+
+\begin{center}
+    $x_{1}' = p_{11}(t)x_{1} + ... + p_{1n}(t)x_{n} + g_{1}(t),$\\
+    $\vdots$\\
+    $x_{n}' = p_{n1}(t)x_{1} + ... + p_{nn}(t)x_{n} + g_{n}(t)$
+\end{center}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Systems of ODEs Cont.}
+\begin{block}{Matrix Formulation of $n$ First-Order System of ODEs}
+    $\boldsymbol{x}(t)$ is the vector consisting of the elements $x_{1}(t),..., x_{n}(t)$, $\boldsymbol{g}(t)$ is the vector consisting of the components $g_{1}(t),...,g_{n}(t)$, and $p_{11}(t),..., p_{nn}(t)$ are elements of an $n \times n$ matrix $\boldsymbol{P}(t)$. The resulting equation is $\boldsymbol{x}' = \boldsymbol{P}(t)\boldsymbol{x}+\boldsymbol{g}(t)$. One can solve this system by first finding the homogeneous solution by making $\boldsymbol{g}(t)=\boldsymbol{0}$. So we can denote the solutions as
+\begin{equation}
+    \boldsymbol{x}^{(1)}(t) = \begin{pmatrix}
+        x_{11}(t)\\
+        x_{21}(t)\\
+        \vdots\\
+        x_{n1}(t)
+    \end{pmatrix}, ...,
+    \boldsymbol{x}^{(k)}
+(t) = \begin{pmatrix}
+    x_{1k}(t)\\
+    x_{2k}(t)\\
+    \vdots\\
+    x_{nk}(t)
+\end{pmatrix},...
+\label{eqn:ode_system}
+\end{equation}
+\end{block}
+\end{frame}
+
+\begin{frame}{Numerical Methods for Ordinary \& Partial Differential Equations}
+\begin{itemize}
+    \item If closed-form solutions are hard to obtain, numerical methods can be used to find approximated solutions to a set precision
+    \item Finite Difference Schemes used to approximate derivatives and partial derivatives
+\end{itemize}
+\begin{block}{Finite Difference Example}
+Let $y(0)=0$ and $y(5)=50$ be boundary conditions for the following second-order differential equation:
+    \begin{equation}
+    \frac{d^2y}{dx^2}=-g
+    \label{eqn:finite_diff_ex}
+\end{equation}
+We can use the finite difference scheme
+\begin{equation}
+    \frac{d^2y}{dx^2}=\frac{y_{i-1}-2y_{i}+y_{i+1}}{h^2}
+    \label{eqn:stencil}
+\end{equation}
+for $i=1,...,n-1$ to discretize the problem into a system of equations.
+\end{block}
+\end{frame}
+
+\begin{frame}{Numerical Methods Cont.}
+    \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+        \column{.45\textwidth} % Left column and width
+        $\begin{pmatrix}
+        1 & 0 &  &  & \\
+        1 & -2 & 1 &  & \\
+         & \ddots & \ddots & \ddots & \\
+         &  & 1 & -2 & 1\\
+         &  &  &  & 1
+    \end{pmatrix}
+    \begin{pmatrix}
+        y_{0}\\
+        y_{1}\\
+        \dots\\
+        y_{n-1}\\
+        y_{n}
+    \end{pmatrix}
+    =\begin{pmatrix}
+        0\\
+        -gh^2\\
+        \dots\\
+        -gh^2\\
+        50
+    \end{pmatrix}$
+
+        \column{.45\textwidth} % Right column and width
+        \centering
+        \includegraphics[scale=0.30]{bvp_finite_difference.png}
+
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Multiple Linear Regression}
+\begin{block}{Multiple Linear Regression}
+    Suppose we have the model $y_{i}=\beta_{0}+\beta_{1}x_{1}+\beta_{2}x_{2}+...+\beta_{p}x_{p}+\epsilon_{i}$. Then we can rewrite the model in matrix form:
+\begin{equation}
+    \boldsymbol{y} = X{\boldsymbol{\beta}}+\boldsymbol{\epsilon}
+\end{equation}
+where $\boldsymbol{y}$ is the response vector $(y_{1}, y_{2},...,y_{n})^T$, $\boldsymbol{\beta}$ is the regression coefficient vector consisting of $(\beta_{0}, \beta_{1},...,\beta_{p})^T$, $\boldsymbol{\epsilon}$ is the random error vector $(\epsilon_{1}, \epsilon_{2},...,\epsilon_{n})^T$
+\end{block}
+
+$X$ is the following design matrix:
+\begin{center}
+    $X=\begin{pmatrix}
+        1 & x_{11} & x_{12} & ... & x_{1p}\\
+        1 & x_{21} & x_{22} & ... & x_{2p}\\
+        \vdots & \vdots & \vdots & \ddots & \vdots\\
+        1 & x_{n1} & x_{n2} & ... & x_{np}
+    \end{pmatrix}$
+\end{center}
+\end{frame}
+
+\begin{frame}{Multiple Linear regression Cont.}
+
+\begin{itemize}
+    \item In MLP, we assume each random error in $\boldsymbol{\epsilon}$ follows a Normal Distribution with zero mean and finite variance
+    \item Observations are independent
+    \item There is a linear relationship between the dependent and independent variables
+    \item Residuals follow homoscedasticity (constant variance) at every point
+\end{itemize}
+\begin{block}{Hypothesis Testing for Significance of Regression Coefficients}
+To test the hypotheses at the $(1-\alpha)\%$ significance level:
+\begin{center}
+    $H_{0}: \beta_{i} = 0$\\
+    $H_{a}: \beta_{i} \neq \beta_{j}$
+\end{center}
+for $i \neq j$, we reject $H_{0}$ if the p-value of the test is less than the given significance level. Otherwise, we fail to reject $H_{0}$.
+\end{block}
+\end{frame}
+
+\begin{frame}{Least Absolute Shrinkage and Selection Operator (LASSO) Algorithm}
+\begin{block}{LASSO Algorithm}
+Under the Multiple Linear Regression model $y=\beta_0+\beta_1x_1+...+\beta_px_{p}+\epsilon_{i}$, where the random errors $\epsilon_{i} \sim N(0, \sigma^2)$. Under this regression model with $p$ predictors, the LASSO algorithm can be written as a constrained quadratic programming minimization problem:
+\begin{center}
+    $\displaystyle {\min_{\boldsymbol{\beta}} \sum_{i=1}^{N} {(y_{i}-\beta_{0}-\sum_{j=1}^{p} {x_{ij}\beta_{j}}})^2}$\\
+    subject to:
+    $\displaystyle\sum_{j=1}^{p} {|\beta_{j}|} \leq t$
+\end{center}
+\end{block}
+\begin{itemize}
+    \item $p$ is number of predictors and $N$ is number of observations
+    \item Also known as $L_{1}$ regularized regression
+    \item Used for feature selection
+\end{itemize}
+\end{frame}
+
+\begin{frame}{LASSO Cont.}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.85]{lasso.jpg}
+    \label{fig:LASSO}
+    \caption{Visualization of LASSO}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Proper Orthogonal Decomposition}
+    \begin{itemize}
+        \item Proper Orthogonal Decomposition (POD) has been applied to analyzing fluid dynamics and turbulence flows
+        \item Chatterjee provides an introduction to POD for matrix decomposition of high-dimensional data to lower-dimensional representations
+        \item The $k$th order low-rank approximation of $A$ via POD is the most efficient due to no $k$ matrix being close to A in the Frobenius (discretized $L_{2}$) norm [Chatterjee, 2000]
+    \end{itemize}
+    \begin{block}{Proper Orthogonal Decomposition}
+    Given an $n \times m$ matrix $A$, POD decomposes the matrix into:
+    \begin{equation}
+        A = U \Sigma V^T
+        \label{eqn:pod_eqn}
+    \end{equation}
+    where $U$ is $n \times n$, $\Sigma$ is $n \times m$, and $V^T$ is $m \times m$.
+    \end{block}
+\end{frame}
+
+\begin{frame}{POD Example}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.34]{approximation_pod_A.png}
+    \label{fig:pod_ex}
+    \caption{POD Approximation of Matrix A Reconstruction}
+\end{figure}
+\end{frame}
+
+% \begin{frame}{Table}
+%     \begin{table}
+%         \begin{tabular}{l l l}
+%             \toprule
+%             \textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2} \\
+%             \midrule
+%             Treatment 1         & 0.0003262           & 0.562               \\
+%             Treatment 2         & 0.0015681           & 0.910               \\
+%             Treatment 3         & 0.0009271           & 0.296               \\
+%             \bottomrule
+%         \end{tabular}
+%         \caption{Table caption}
+%     \end{table}
+% \end{frame}
+
+%------------------------------------------------
+
+% \begin{frame}{Theorem}
+%     \begin{theorem}[Mass--energy equivalence]
+%         $E = mc^2$
+%     \end{theorem}
+% \end{frame}
+
+%------------------------------------------------
+
+% \begin{frame}{Figure}
+%     Uncomment the code on this slide to include your own image from the same directory as the template .TeX file.
+%     %\begin{figure}
+%     %\includegraphics[width=0.8\linewidth]{test}
+%     %\end{figure}
+% \end{frame}
+
+%------------------------------------------------
+
+\section{Model A: Circle Translation From Left to Right}
+
+\begin{frame}{Overview for Models A \& B}
+\begin{itemize}
+    \item Sparse linear regression will be used to extract the data-driven model
+    \item LASSO regularized regression is used for feature selection to validate the data-driven model for a physics-driven model
+    \item Once the PDEs have been discovered, numerical methods such as the Forward Euler algorithm will be used to solve for the reconstructed images from the governing equation
+    \item Extrapolations are generated to reconstruct images and predict future extrapolations for future nonnegative time steps
+\end{itemize}
+\begin{block}{Functional Form of Black-Box PDEs}
+Both models A and B follow the form:
+\begin{equation}
+    u_{t} = F(u, u_{x}, u_{xx}, u_{xy}, u_{y}, u_{yy})
+    \label{eqn:blackbox_pde}
+\end{equation}
+where the left-hand side of equation~\ref{eqn:blackbox_pde} contains the time derivative and the right-hand side contains the spatial derivatives.
+\end{block}
+\end{frame}
+
+\begin{frame}{Data Preprocessing \& Workflow}
+    \begin{itemize}
+        \item Created 50 slides to synthetically mimic video frame splicing with equidistant object movement
+        \item Converted images to grayscale (white = 1, black = 0)
+        \item Computed partial derivatives of each frame (representing $u$) $u_{x}$, $u_{xx}$, $u_{y}$, $u_{yy}$ and formed them into a data matrix
+        \item Performed linear regression on the data matrix to extract data-driven PDE
+        \item Performed LASSO on the data matrix to extract physics-driven PDE
+        \item Once PDEs are obtained, perform an iterative Euler method to solve PDE $u_{t}$ and reconstruct approximated images $\tilde{u}$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Data-Driven Regression Results}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.5]{data_driven_coeffs_modA.png}
+        \caption{Data-Driven Regression}
+        \label{fig:data_driven_regA}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{LASSO A}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.5]{lasso_modA.png}
+        \caption{LASSO Feature Selection for Model A}
+        \label{fig:lasso_B}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Physics-Driven Regression and LASSO Results}
+\begin{figure}
+    \centering
+        \includegraphics[scale=0.5]{physics_driven_coeffs_modA.png}
+        \caption{Physics-Driven Regression}
+        \label{fig:physics_driven_regA}
+        \end{figure}
+\end{frame}
+
+\begin{frame} {Modified Image-iterative Euler Method A}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.45]{algorithm_B.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Data-Driven Results}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.35]{moving_circle_noise_predictions.png}
+        \caption{Data-Driven Extrapolations Before Denoising}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Data-Driven Results Continued}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.35]{moving_circle_denoise_datadriven.png}
+        \caption{Data-Driven Extrapolations After Denoising}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Physics-Driven Results}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.35]{translation_before_denoising.png}
+        \caption{Physics-Driven Extrapolations Before Denoising}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Physics-Driven Results Continued}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.35]{translation_after_denoising.png}
+        \caption{Physics-Driven Extrapolations After Denoising}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Table of MSEs for Model A}
+    \begingroup
+\singlespacing
+\begin{table}[!h]
+\centering
+\begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+\hline
+\textbf{Model Type} & \textbf{Image 1} & \textbf{Image 2} & \textbf{Image 3} & \textbf{Image 4} &
+\textbf{Image 5}\\
+\hline
+ Data-Driven & 0.0  & 0.0024  & 0.0099 & 0.0221 & 0.0425  \\
+\hline
+Physics-Driven & 0.0 & 0.0024 & 0.0099 & 0.0221 &
+0.0372 \\
+\hline
+
+\end{tabular}
+\caption{Table of MSEs for Model A}
+\label{tab:mse_ch3}
+\end{table}
+\endgroup
+\end{frame}
+
+\section{Model B: Circle Translation From Left to Right and Constant Expansion}
+
+\begin{frame}{Data Preprocessing \& Workflow}
+\begin{itemize}
+        \item Created 50 slides to synthetically mimic video frame splicing with equidistant object movement
+        \item Converted images to grayscale (white = 1, black = 0)
+        \item Computed partial derivatives of each frame (representing $u$) $u_{x}$, $u_{xx}$, $u_{y}$, $u_{xy}$, $u_{yy}$ and formed them into a data matrix
+        \item We do not compute $u_{yx}$ here due to the application of Clairaut's Theorem [Tao, 2006].
+        \begin{theorem}[Clairaut's Theorem]
+        Let $f: X, Y \rightarrow Z$ be a function on the open region $\mathbb{R} \subset \mathbb{R}^2$. If $f$ has continuous second-order partial derivatives that exist at every point in $\mathbb{R}$, then $f_{xy} = f_{yx}$.
+        \end{theorem}
+        \item Performed linear regression on the data matrix to extract data-driven PDE
+        \item Performed LASSO on the data matrix to extract physics-driven PDE
+        \item Once PDEs are obtained, perform an iterative Euler method to solve PDE $u_{t}$ and reconstruct approximated images $\tilde{u}$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Data-Driven Regression Results}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.5]{data_driven_coeffs_modB.png}
+        \caption{Data-Driven Regression}
+        \label{fig:data_driven_regB}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{LASSO B Results}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.45]{lasso_modB.png}
+        \caption{LASSO Feature Selection for Model B}
+        \label{fig:lasso_B}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Physics-Driven Regression Results}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.5]{physics_driven_coeffs_modB.png}
+        \caption{Physics-Driven Regression}
+        \label{fig:physics_driven_regB}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Modified Image-iterative Euler Method B}
+
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.40]{algorithm_A.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Data-Driven Results}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.35]{moving_expanding_noise_predictions.png}
+        \caption{Data-Driven Extrapolations Before Denoising}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Data-Driven Results Continued}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.35]{moving_expanding_denoise_predictions_2.png}
+        \caption{Data-Driven Extrapolations After Denoising}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Physics-Driven Results}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.35]{moving_expanding_noise_physicsdriven.png}
+        \caption{Physics-Driven Extrapolations Before Denoising}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Physics-Driven Results Continued}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.35]{moving_expanding_denoise_physicsdriven.png}
+        \caption{Physics-Driven Extrapolations After Denoising}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Table of MSEs of Model B}
+    \begingroup
+\singlespacing
+\begin{table}[!h]
+\centering
+\begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+\hline
+\textbf{Model Type} & \textbf{Image 1} & \textbf{Image 2} & \textbf{Image 3} & \textbf{Image 4} &
+\textbf{Image 5}\\
+\hline
+ Data-Driven & 0.0  & 0.0158  & 0.0501 & 0.1161 & 0.1974  \\
+\hline
+Physics-Driven & 0.0 & 0.0158 & 0.0501 & 0.1161 &
+0.1974 \\
+\hline
+
+\end{tabular}
+\caption{Table of MSEs for Model B}
+\label{tab:mse_ch4}
+\end{table}
+\endgroup
+\end{frame}
+
+\section{Waterdrop Analysis via Proper Orthogonal Decomposition and LASSO}
+
+\begin{frame}{Data Preprocessing}
+    \begin{itemize}
+        \item Splice video into fifty equidistant time step snapshot frames
+        \item Transform images into grayscale prior to performing POD
+    \end{itemize}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.65]{grayscale_waterdrop.png}
+        \label{fig:grayscale_water}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Workflow}
+\begin{itemize}
+    \item It is hard to extract a formal black-box PDE/System of ODEs in this case due to nonlinear motion
+    \item \emph{Goal}: Use nonlinear regression and LASSO techniques as a data-driven approach to extract the system of solutions that would satisfy such a model
+    \item Perform POD and extract the orthogonal component modes and time coefficients
+    \item Approximate POD modes as sine and cosine functions of $t$ via sparse harmonic regression and LASSO
+    \item Formulate a linear combination of the modes and functions and generate reconstructions of original snapshots
+    \item Further utilize this solution to extrapolate predictions of future images valid for any real-valued time step
+\end{itemize}
+\end{frame}
+
+\begin{frame}{POD Modes}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.45]{POD_modes.png}
+        \caption{Graph of the Six POD Modes}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Example of Harmonic Regression of POD Mode 5}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.7]{pod5_lassofit.png}
+        \label{fig:pod5_lasso}
+        \caption{Sparse harmonic regression has been shown to be effective in capturing the nonlinear nature of the fifth POD mode}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Approximated Functional Solutions from Harmonic Regression and LASSO Workflow}
+    \begin{block}{Approximation Example of First POD Mode}
+    \begin{align*}
+        f_1(t) \approx 
+-0.0483\sin(2\pi t) + 0.1467\sin(3\pi t) + 0.0222\sin(4\pi t) + 0.0122\sin(5\pi t) \\\\
++ 0.0314\cos(\pi t) + 0.0930\cos(2\pi t) - 0.0104\cos(4\pi t)
+\end{align*}
+\end{block}
+\begin{itemize}
+\item This workflow yielded six functional approximations such as the one presented in the block above
+\item We can now combine POD mode functions with their coefficients and use this to generate reconstructions and extrapolations for future $t$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Functional Solution to the Waterdrop Model}
+\begin{block}{Functional Solution}
+    After obtaining the function forms of the POD mode coefficients, we can now obtain the theoretical solution, denoted as $T(t)$, for the system of ODEs. This solution follows the form
+
+\begin{equation}
+    T(t) = \Sigma_{i=1}^{6} f_{i}(t) \, \text{mode}_{i}
+    \label{eqn:T_solution}
+\end{equation}
+where $f_{i}(t)$ are the approximated functions and the modes are obtained from POD.
+\end{block}
+\end{frame}
+
+\begin{frame}{Extrapolations}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.35]{transpoed_extrap.png}
+    \label{fig:extraps}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Structural Similarity (SSIM) Index Example}
+\begin{itemize}
+    \item Due to the uncertainty of noise accumulation, we also introduce the SSIM metric to ensure image quality
+    \item Closer to 0 means less similar, closer to 1 means more similar to original image
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.5]{SSIM_Example.jpg}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Table of MSEs and SSIMs for Waterdrop Model}
+    \begingroup
+\singlespacing
+\begin{table}[!h]
+\centering
+\begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+\hline
+ \textbf{Image 1} & \textbf{Image 2} & \textbf{Image 3} & \textbf{Image 4} &
+ \textbf{Image 5}\\
+\hline
+  29.549  & 27.217  & 28.064 & 29.878 & 27.261  \\
+\hline
+
+\end{tabular}
+\caption{Table of MSEs for Waterdrop Model}
+\label{tab:mse_waterdrop}
+\end{table}
+\endgroup
+
+\begingroup
+\singlespacing
+\begin{table}[!h]
+\centering
+\begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+\hline
+ \textbf{Image 1} & \textbf{Image 2} & \textbf{Image 3} & \textbf{Image 4} &
+ \textbf{Image 5}\\
+\hline
+  0.9812  & 0.9813  & 0.9822 & 0.9815 & 0.9824  \\
+\hline
+
+\end{tabular}
+\caption{Table of SSIM Scores for Waterdrop Model}
+\label{tab:ssim_water}
+\end{table}
+\endgroup
+\end{frame}
+
+% \begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
+%     \frametitle{Citation}
+%     An example of the \verb|\cite| command to cite within the presentation:\\~
+
+%     This statement requires citation \cite{p1}. \cite{p2}
+% \end{frame}
+
+%------------------------------------------------
+
+% \begin{frame}[allowframebreaks]{References}
+%     \footnotesize
+%     \bibliography{reference.bib}
+%     \bibliographystyle{apalike}
+% \end{frame}
+
+\begin{frame}{References I}
+\includegraphics[scale=0.6]{ref1.png}
+\end{frame}
+
+\begin{frame}{References II}
+\includegraphics[scale=0.6]{ref2.png}
+\end{frame}
+
+\begin{frame}{References III}
+\includegraphics[scale=0.6]{ref3.png}
+\end{frame}
+
+\begin{frame}{References IV}
+\includegraphics[scale=0.6]{ref4.png}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Asahina Mafuyu Says...}
+        \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+        \column{.45\textwidth} % Left column and width
+        \includegraphics[scale=0.3]{mafuyu_thesis.png}
+
+        \column{.45\textwidth} % Right column and width
+        If you would like the full source code and paper for this thesis, email Cory at: cory.suzuki-SA@csulb.edu or check out his Github: \url{https://github.com/CorySuzuki1729/Masters-Thesis}
+
+    \end{columns}
+\end{frame}
+
+\begin{frame}{The End}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.4]{Emma.jpg}
+        \caption{My cat Emma, not a statistician but a major contributor to my studies}
+    \end{figure}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
